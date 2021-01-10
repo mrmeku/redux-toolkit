@@ -72,6 +72,7 @@ describe('createSlice', () => {
       reducers: {
         setUserName: (state, action) => {
           state.user = action.payload
+          return state
         }
       },
       initialState,

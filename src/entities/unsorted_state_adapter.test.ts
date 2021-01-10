@@ -7,7 +7,10 @@ import {
   AnimalFarm,
   TheHobbit
 } from './fixtures/book'
-import { createNextState } from '..'
+
+function createNextState<S>(state: S, updateState: (s: S) => S) {
+  return updateState(state)
+}
 
 describe('Unsorted State Adapter', () => {
   let adapter: EntityStateAdapter<BookModel>
@@ -359,7 +362,7 @@ describe('Unsorted State Adapter', () => {
     test('removeAll', () => {
       const withTwo = adapter.addMany(state, [TheGreatGatsby, AnimalFarm])
       const result = createNextState(withTwo, draft => {
-        adapter.removeAll(draft)
+        return adapter.removeAll(draft)
       })
       expect(result).toMatchInlineSnapshot(`
         Object {
@@ -371,7 +374,7 @@ describe('Unsorted State Adapter', () => {
 
     test('addOne', () => {
       const result = createNextState(state, draft => {
-        adapter.addOne(draft, TheGreatGatsby)
+        return adapter.addOne(draft, TheGreatGatsby)
       })
 
       expect(result).toMatchInlineSnapshot(`
@@ -391,7 +394,7 @@ describe('Unsorted State Adapter', () => {
 
     test('addMany', () => {
       const result = createNextState(state, draft => {
-        adapter.addMany(draft, [TheGreatGatsby, AnimalFarm])
+        return adapter.addMany(draft, [TheGreatGatsby, AnimalFarm])
       })
 
       expect(result).toMatchInlineSnapshot(`
@@ -416,7 +419,7 @@ describe('Unsorted State Adapter', () => {
 
     test('setAll', () => {
       const result = createNextState(state, draft => {
-        adapter.setAll(draft, [TheGreatGatsby, AnimalFarm])
+        return adapter.setAll(draft, [TheGreatGatsby, AnimalFarm])
       })
 
       expect(result).toMatchInlineSnapshot(`
@@ -443,7 +446,7 @@ describe('Unsorted State Adapter', () => {
       const withOne = adapter.addOne(state, TheGreatGatsby)
       const changes = { title: 'A New Hope' }
       const result = createNextState(withOne, draft => {
-        adapter.updateOne(draft, {
+        return adapter.updateOne(draft, {
           id: TheGreatGatsby.id,
           changes
         })
@@ -476,7 +479,7 @@ describe('Unsorted State Adapter', () => {
       ])
 
       const result = createNextState(withMany, draft => {
-        adapter.updateMany(draft, [
+        return adapter.updateMany(draft, [
           { id: TheHobbit.id, changes: firstChange },
           { id: TheGreatGatsby.id, changes: secondChange },
           { id: AClockworkOrange.id, changes: thirdChange },
@@ -512,7 +515,7 @@ describe('Unsorted State Adapter', () => {
 
     test('upsertOne (insert)', () => {
       const result = createNextState(state, draft => {
-        adapter.upsertOne(draft, TheGreatGatsby)
+        return adapter.upsertOne(draft, TheGreatGatsby)
       })
       expect(result).toMatchInlineSnapshot(`
         Object {
@@ -532,7 +535,7 @@ describe('Unsorted State Adapter', () => {
     test('upsertOne (update)', () => {
       const withOne = adapter.upsertOne(state, TheGreatGatsby)
       const result = createNextState(withOne, draft => {
-        adapter.upsertOne(draft, {
+        return adapter.upsertOne(draft, {
           id: TheGreatGatsby.id,
           title: 'A New Hope'
         })
@@ -555,7 +558,7 @@ describe('Unsorted State Adapter', () => {
     test('upsertMany', () => {
       const withOne = adapter.upsertOne(state, TheGreatGatsby)
       const result = createNextState(withOne, draft => {
-        adapter.upsertMany(draft, [
+        return adapter.upsertMany(draft, [
           {
             id: TheGreatGatsby.id,
             title: 'A New Hope'
@@ -586,7 +589,7 @@ describe('Unsorted State Adapter', () => {
     test('removeOne', () => {
       const withTwo = adapter.addMany(state, [TheGreatGatsby, AnimalFarm])
       const result = createNextState(withTwo, draft => {
-        adapter.removeOne(draft, TheGreatGatsby.id)
+        return adapter.removeOne(draft, TheGreatGatsby.id)
       })
       expect(result).toMatchInlineSnapshot(`
         Object {
@@ -610,7 +613,7 @@ describe('Unsorted State Adapter', () => {
         AClockworkOrange
       ])
       const result = createNextState(withThree, draft => {
-        adapter.removeMany(draft, [TheGreatGatsby.id, AnimalFarm.id])
+        return adapter.removeMany(draft, [TheGreatGatsby.id, AnimalFarm.id])
       })
       expect(result).toMatchInlineSnapshot(`
         Object {

@@ -20,14 +20,11 @@ export function createSortedStateAdapter<T>(
     selectId
   )
 
-  function addOneMutably(entity: T, state: R): void {
-    return addManyMutably([entity], state)
+  function addOne(entity: T, state: R): R {
+    return addMany([entity], state)
   }
 
-  function addManyMutably(
-    newModels: T[] | Record<EntityId, T>,
-    state: R
-  ): void {
+  function addMany(newModels: T[] | Record<EntityId, T>, state: R): R {
     if (!Array.isArray(newModels)) {
       newModels = Object.values(newModels)
     }
@@ -37,22 +34,24 @@ export function createSortedStateAdapter<T>(
     )
 
     if (models.length !== 0) {
-      merge(models, state)
+      state = merge(models, state)
     }
+
+    return state
   }
 
-  function setAllMutably(models: T[] | Record<EntityId, T>, state: R): void {
+  function setAll(models: T[] | Record<EntityId, T>, state: R): R {
     if (!Array.isArray(models)) {
       models = Object.values(models)
     }
     state.entities = {}
     state.ids = []
 
-    addManyMutably(models, state)
+    return addMany(models, state)
   }
 
-  function updateOneMutably(update: Update<T>, state: R): void {
-    return updateManyMutably([update], state)
+  function updateOne(update: Update<T>, state: R): R {
+    return updateMany([update], state)
   }
 
   function takeUpdatedModel(models: T[], update: Update<T>, state: R): boolean {
@@ -71,24 +70,23 @@ export function createSortedStateAdapter<T>(
     return newKey !== update.id
   }
 
-  function updateManyMutably(updates: Update<T>[], state: R): void {
+  function updateMany(updates: Update<T>[], state: R): R {
     const models: T[] = []
 
     updates.forEach(update => takeUpdatedModel(models, update, state))
 
     if (models.length !== 0) {
-      merge(models, state)
+      state = merge(models, state)
     }
+
+    return state
   }
 
-  function upsertOneMutably(entity: T, state: R): void {
-    return upsertManyMutably([entity], state)
+  function upsertOne(entity: T, state: R): R {
+    return upsertMany([entity], state)
   }
 
-  function upsertManyMutably(
-    entities: T[] | Record<EntityId, T>,
-    state: R
-  ): void {
+  function upsertMany(entities: T[] | Record<EntityId, T>, state: R): R {
     if (!Array.isArray(entities)) {
       entities = Object.values(entities)
     }
@@ -105,8 +103,10 @@ export function createSortedStateAdapter<T>(
       }
     }
 
-    updateManyMutably(updated, state)
-    addManyMutably(added, state)
+    state = updateMany(updated, state)
+    state = addMany(added, state)
+
+    return state
   }
 
   function areArraysEqual(a: unknown[], b: unknown[]) {
@@ -123,7 +123,7 @@ export function createSortedStateAdapter<T>(
     return true
   }
 
-  function merge(models: T[], state: R): void {
+  function merge(models: T[], state: R): R {
     models.sort(sort)
 
     // Insert/overwrite all new/updated
@@ -140,18 +140,19 @@ export function createSortedStateAdapter<T>(
     if (!areArraysEqual(ids, newSortedIds)) {
       state.ids = newSortedIds
     }
+    return state
   }
 
   return {
     removeOne,
     removeMany,
     removeAll,
-    addOne: createStateOperator(addOneMutably),
-    updateOne: createStateOperator(updateOneMutably),
-    upsertOne: createStateOperator(upsertOneMutably),
-    setAll: createStateOperator(setAllMutably),
-    addMany: createStateOperator(addManyMutably),
-    updateMany: createStateOperator(updateManyMutably),
-    upsertMany: createStateOperator(upsertManyMutably)
+    addOne: createStateOperator(addOne),
+    updateOne: createStateOperator(updateOne),
+    upsertOne: createStateOperator(upsertOne),
+    setAll: createStateOperator(setAll),
+    addMany: createStateOperator(addMany),
+    updateMany: createStateOperator(updateMany),
+    upsertMany: createStateOperator(upsertMany)
   }
 }

@@ -17,6 +17,7 @@ import { expectType } from './helpers'
       expectType<{ type: 'increment'; payload: string }>(action)
       // @ts-expect-error
       expectType<{ type: 'decrement'; payload: number }>(action)
+      return state
     })
 
     builder.addCase('increment', (state, action) => {
@@ -26,6 +27,7 @@ import { expectType } from './helpers'
       expectType<{ type: 'decrement' }>(action)
       // @ts-expect-error - this cannot be inferred and has to be manually specified
       expectType<{ type: 'increment'; payload: number }>(action)
+      return state
     })
 
     builder.addCase(
@@ -51,6 +53,7 @@ import { expectType } from './helpers'
     // action type is inferred
     builder.addMatcher(increment.match, (state, action) => {
       expectType<ReturnType<typeof increment>>(action)
+      return state
     })
 
     // action type defaults to AnyAction if no type predicate matcher is passed
@@ -58,6 +61,7 @@ import { expectType } from './helpers'
       () => true,
       (state, action) => {
         expectType<AnyAction>(action)
+        return state
       }
     )
 
@@ -69,6 +73,7 @@ import { expectType } from './helpers'
       )
       .addMatcher(decrement.match, (state, action) => {
         expectType<ReturnType<typeof decrement>>(action)
+        return state
       })
 
     // addCase().addDefaultCase() is possible, action type is AnyAction
@@ -79,26 +84,27 @@ import { expectType } from './helpers'
       )
       .addDefaultCase((state, action) => {
         expectType<AnyAction>(action)
+        return state
       })
 
     {
       // addMatcher() should prevent further calls to addCase()
-      const b = builder.addMatcher(increment.match, () => {})
+      const b = builder.addMatcher(increment.match, s => s)
       // @ts-expect-error
-      b.addCase(increment, () => {})
-      b.addMatcher(increment.match, () => {})
-      b.addDefaultCase(() => {})
+      b.addCase(increment, s => s)
+      b.addMatcher(increment.match, s => s)
+      b.addDefaultCase(s => s)
     }
 
     {
       // addDefaultCase() should prevent further calls to addCase(), addMatcher() and addDefaultCase
-      const b = builder.addDefaultCase(() => {})
+      const b = builder.addDefaultCase(s => s)
       // @ts-expect-error
-      b.addCase(increment, () => {})
+      b.addCase(increment, s => s)
       // @ts-expect-error
-      b.addMatcher(increment.match, () => {})
+      b.addMatcher(increment.match, s => s)
       // @ts-expect-error
-      b.addDefaultCase(() => {})
+      b.addDefaultCase(s => s)
     }
   })
 }

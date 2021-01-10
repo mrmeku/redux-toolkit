@@ -1,9 +1,8 @@
-import createNextState, { isDraft } from 'immer'
 import { EntityState, PreventAny } from './models'
 import { PayloadAction, isFSA } from '../createAction'
 
 export function createSingleArgumentStateOperator<V>(
-  mutator: (state: EntityState<V>) => void
+  mutator: (state: EntityState<V>) => EntityState<V>
 ) {
   const operator = createStateOperator((_: undefined, state: EntityState<V>) =>
     mutator(state)
@@ -12,17 +11,14 @@ export function createSingleArgumentStateOperator<V>(
   return function operation<S extends EntityState<V>>(
     state: PreventAny<S, V>
   ): S {
-    return operator(state as S, undefined)
+    return operator(state as S, undefined) as S
   }
 }
 
-export function createStateOperator<V, R>(
-  mutator: (arg: R, state: EntityState<V>) => void
+export function createStateOperator<V, R, S extends EntityState<V>>(
+  mutator: (arg: R, state: EntityState<V>) => S
 ) {
-  return function operation<S extends EntityState<V>>(
-    state: S,
-    arg: R | PayloadAction<R>
-  ): S {
+  return function operation(state: S, arg: R | PayloadAction<R>): S {
     function isPayloadActionArgument(
       arg: R | PayloadAction<R>
     ): arg is PayloadAction<R> {
@@ -31,25 +27,12 @@ export function createStateOperator<V, R>(
 
     const runMutator = (draft: EntityState<V>) => {
       if (isPayloadActionArgument(arg)) {
-        mutator(arg.payload, draft)
+        return mutator(arg.payload, draft)
       } else {
-        mutator(arg, draft)
+        return mutator(arg, draft)
       }
     }
 
-    if (isDraft(state)) {
-      // we must already be inside a `createNextState` call, likely because
-      // this is being wrapped in `createReducer` or `createSlice`.
-      // It's safe to just pass the draft to the mutator.
-      runMutator(state)
-
-      // since it's a draft, we'll just return it
-      return state
-    } else {
-      // @ts-ignore createNextState() produces an Immutable<Draft<S>> rather
-      // than an Immutable<S>, and TypeScript cannot find out how to reconcile
-      // these two types.
-      return createNextState(state, runMutator)
-    }
+    return runMutator(state)
   }
 }
